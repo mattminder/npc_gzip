@@ -8,10 +8,8 @@ from pathos.multiprocessing import ProcessingPool as Pool
 import time
 from torchtext.datasets import IMDB, AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YahooAnswers, AmazonReviewPolarity
 
-# np.random.seed(6)
 
 def non_neural_knn_exp(compressor_name, test_data, test_label, train_data, train_label, agg_func, dis_func, k, para=True):
-    print("KNN with compressor={}".format(compressor_name))
     cp = DefaultCompressor(compressor_name)
     knn_exp_ins = KnnExpText(agg_func, cp, dis_func)
     start = time.time()
@@ -22,8 +20,11 @@ def non_neural_knn_exp(compressor_name, test_data, test_label, train_data, train
         # print('accuracy:{}'.format(np.average(np.array(pred_correct_pair, dtype=np.object_)[:, 1])))
     else:
         knn_exp_ins.calc_dis(test_data, train_data=train_data)
-        knn_exp_ins.calc_acc(k, test_label, train_label=train_label)
-    print("spent: {}".format(time.time() - start))
+        accuracy = knn_exp_ins.calc_acc(k, test_label, train_label=train_label)
+
+    time_spent = time.time() - start
+
+    print(f"{compressor_name},{accuracy},{time_spent}")
 
 def record_distance(compressor_name, test_data, test_portion_name, train_data, agg_func, dis_func, out_dir, para=True):
     print("compressor={}".format(compressor_name))
@@ -69,7 +70,18 @@ if __name__ == '__main__':
     parser.add_argument('--distance_fn', default=None)
     parser.add_argument('--score', action='store_true', default=False)
     parser.add_argument('--k', default=2, type=int)
+    parser.add_argument('--seed', default=1, type=int)
     args = parser.parse_args()
+
+    # Print the args in csv-like format
+    args_str = [
+        f"{key}={val}"
+        for key, val
+        in args.__dict__.items()
+    ]
+    print(",".join(args_str)+",", end="")
+
+    np.random.seed(args.seed)
     # create output dir
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)

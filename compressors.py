@@ -2,6 +2,8 @@
 import gzip
 import bz2
 import lzma
+import lz4.frame
+
 # from PIL.PngImagePlugin import getchunks
 # from PIL import Image
 import sys
@@ -21,6 +23,8 @@ class DefaultCompressor:
             self.compressor = bz2
         elif compressor == 'lzma':
             self.compressor = lzma
+        elif compressor == "lz4":
+            self.compressor = lz4.frame
         else:
             raise RuntimeError("Unsupported compressor")
         self.type = typ
@@ -34,9 +38,3 @@ class DefaultCompressor:
             data = fo.read()
             compressed_str = self.compressor.compress(data.encode('utf-8'))
             return len(compressed_str)*8/len(data)
-
-
-
-"""Test Compressors"""
-# comp = DefaultCompressor('gzip')
-# print(comp.get_compressed_len('Hello world'))

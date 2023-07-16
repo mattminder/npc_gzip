@@ -221,7 +221,6 @@ def pick_n_sample_from_each_class(fn, n, idx_only=False):
         recorded_idx += list(select_text_idx)
         result+=list(select_text)
         labels+=[c]*n
-    print(len(result))
     if idx_only:
         return recorded_idx
     else:
@@ -246,7 +245,6 @@ def pick_n_sample_from_each_class_given_dataset(ds, n, output_fn, index_only=Fal
         recorded_idx+=list(select_text_idx)
         result+=list(select_text)
         labels+=[c]*n
-    print(len(result))
     if output_fn is not None:
         np.save(output_fn, np.array(recorded_idx))
     if index_only:
@@ -276,7 +274,5 @@ def pick_n_sample_from_each_class_img(dataset, n, prefix='train', flatten=False)
         recorded_idx+=list(select_img_idx)
         result+=list(select_img)
         labels+=[c]*n
-    print(len(result))
-    print(recorded_idx)
     return result, labels, recorded_idx
 

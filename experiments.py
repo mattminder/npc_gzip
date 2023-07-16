@@ -123,8 +123,10 @@ class KnnExpText:
                 if_right = 1 if most_label==label[i] else 0
             pred.append(most_label)
             correct.append(if_right)
-        print("Accuracy is {}".format(sum(correct)/len(correct)))
-        return pred, correct
+
+        accuracy = sum(correct)/len(correct)
+        return accuracy
+
     def combine_dis_acc(self, k, data, label, train_data=None, train_label=None):
         correct = []
         pred = []
