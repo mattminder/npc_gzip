@@ -7,6 +7,57 @@ from functools import partial
 from pathos.multiprocessing import ProcessingPool as Pool
 import time
 from torchtext.datasets import IMDB, AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YahooAnswers, AmazonReviewPolarity
+import pandas as pd
+from functools import reduce
+
+def ngram_hash_comparison(test_data, test_label, train_data, train_label):
+    """Will be called when compressor == "hashed_ngrams"."""
+    def custom_hash(ngram, n_integers=10e8):
+        """Hashs to n-integer hash code."""
+        return hash(ngram) % int(n_integers)
+
+    def to_ngrams(text, min_ngram=5, max_ngram=50):
+        """Converts the data to a set of its hashed n-grams."""
+        return {
+            custom_hash(text[i:i+n]) 
+            for n in range(min_ngram, max_ngram)
+            for i in range(len(text)-n+1)
+        }
+    
+    def to_df(data, label):
+        return pd.DataFrame(
+            {
+                "data": data,
+                "label": label,
+            }
+        )
+
+    def union_all(series):
+        return reduce(lambda x, y: x.union(y), series)
+
+    start = time.time()
+
+    # Construct training set
+    train_df = to_df(train_data, train_label)
+    hashed = train_df["data"].apply(to_ngrams)
+    class_groups = hashed.groupby(train_df["label"]).agg(union_all)
+
+    # Construct test set
+    test_df = to_df(test_data, test_label)
+    test_ngrams = test_df["data"].apply(to_ngrams)
+
+    prediction = test_ngrams.apply(
+        lambda x: pd.Series(
+            [len(x.intersection(class_ngram_set)) for _, class_ngram_set in class_groups.items()],
+            index=class_groups.index
+        ).idxmax()
+    )
+
+    # Report performance
+    accuracy = (prediction == test_df["label"]).mean()
+    time_spent = time.time() - start
+    print(f"hashed_ngrams,{accuracy},{time_spent}")
+
 
 
 def non_neural_knn_exp(compressor_name, test_data, test_label, train_data, train_label, agg_func, dis_func, k, para=True):
@@ -141,7 +192,10 @@ if __name__ == '__main__':
         train_pair, test_pair = dataset_pair[0], dataset_pair[1]
         train_data, train_labels = read_torch_text_labels(train_pair, range(len(train_pair)))
     if not args.record:
-        non_neural_knn_exp(args.compressor, test_data, test_labels, train_data, train_labels, agg_by_concat_space, NCD, args.k, para=args.para)
+        if args.compressor == "hashed_ngram":
+            ngram_hash_comparison(test_data, test_labels, train_data, train_labels)
+        else:
+            non_neural_knn_exp(args.compressor, test_data, test_labels, train_data, train_labels, agg_by_concat_space, NCD, args.k, para=args.para)
     else:
         if args.test_idx_fn is None:
             output_rel_fn = 'test_dis_idx_from_{}_to_{}'.format(args.test_idx_start, args.test_idx_end)
