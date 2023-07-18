@@ -39,6 +39,10 @@ Notes: In addition to this algorithm being more honest about what it's actually 
 But why does this work so well, and why didn't we have this idea earlier? My guess is that this is a good way of looking at the long tails (i.e. the very rare words and character-combinations) of the character distributions. Meanwhile, TF-IDF-like methods will neglect these tails due to the low "term frequency", and attention-based neural networks seem also to struggle quite a bit to learn long-tail information (as demonstrated in this paper: https://arxiv.org/pdf/2211.08411.pdf for QA tasks).
 
 
+
+Original readme starting here:
+
+
 ### Require
 
 ```
