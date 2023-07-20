@@ -35,56 +35,18 @@ Inferencing: At inference time, we take some text, calculate the set of its hash
 
 Notes: In addition to this algorithm being more honest about what it's actually doing, its inference time is constant w.r.t. the size of the training set, whereas the costs of the algorithm proposed in the original paper grows linearly with the training set - making it not useful in practice. 
 
+### The results
+|dataset|algorithm|mean accuracy|stdev|
+|-|-|-|-|		
+|AG_NEWS|gzip|0.737300|0.004907|
+|AG_NEWS|hashed_ngrams|0.745850|0.008512|
+|AG_NEWS|lz4|0.779150|0.005923|
+|DBpedia|gzip|0.859957|0.001847|
+|DBpedia|hashed_ngrams|0.902500|0.004846|
+|DBpedia|lz4|0.887271|0.003049|
+|YahooAnswers|gzip|0.353660|0.005507|
+|YahooAnswers|hashed_ngrams|0.393460|0.018398|
+|YahooAnswers|lz4|0.359760|0.003715|
+
 ### What does this _mean_?
 But why does this work so well, and why didn't we have this idea earlier? My guess is that this is a good way of looking at the long tails (i.e. the very rare words and character-combinations) of the character distributions. Meanwhile, TF-IDF-like methods will neglect these tails due to the low "term frequency", and attention-based neural networks seem also to struggle quite a bit to learn long-tail information (as demonstrated in this paper: https://arxiv.org/pdf/2211.08411.pdf for QA tasks).
-
-
-
-Original readme starting here:
-
-
-### Require
-
-```
-torch
-torchdata
-torchtext==0.11 (for dataset)
-numpy
-pathos (if need multiprocessing)
-scikit-learn
-tqdm
-unidecode
-datasets
-```
-
-### Run
-
-```
-python main_text.py
-```
-By default, this will only use 100 test and training samples per class as a quick demo. They can be changed by `--num_test`, `--num_train`.
-
-```
---compressor <gzip, lzma, bz2>
---dataset <AG_NEWS, SogouNews, DBpedia, YahooAnswers, 20News, Ohsumed_single, R8, R52, kinnews, kirnews, swahili, filipino> [Note that for small datasets like kinnews, default 100-shot is too big, need to set --num_test and --num_train.]
---num_train <INT>
---num_test <INT>
---data_dir <DIR> [This needs to be specified for R8, R52 and Ohsumed.]
---all_test [This will use the whole test dataset.]
---all_train
---record [This will record the distance matrix in order to save for the future use. It's helpful when you when to run on the whole dataset.]
---test_idx_start <INT>
---test_idx_end <INT> [These two args help us to run on a certain range of test set. Also helpful for calculating the distance matrix on the whole dataset.]
---para [This will use multiprocessing to accelerate.]
---output_dir <DIR> [The output directory to save information of tested indicies or distance matrix.]
-
-```
-
-### Calculate Accuracy (Optional)
-
-If we want to calculate accuracy from recorded distance file <DISTANCE DIR>, use
-
-```
-python main_text.py --record --score --distance_fn <DISTANCE DIR> 
-```
-to calculate accuracy. Otherwise, the accuracy will be calculated automatically using the command in the last section.
